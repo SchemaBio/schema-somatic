@@ -1,8 +1,8 @@
 // FGBIO module for UMI processing (Complete Workflow)
 
-process FGBIOUMI2FQ {
-    tag "FGBIOUMI2FQ on $sample_id"
-    label 'fgbioumi2fq'
+process EXTRACTUMI {
+    tag "EXTRACTUMI on $sample_id"
+    label 'extractumi'
     publishDir "${params.output}/01.QC/Fgbio", mode: 'copy'
 
     input:
