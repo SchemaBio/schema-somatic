@@ -1,0 +1,27 @@
+# Nextflow
+.nextflow*
+work/
+output/
+results/
+.reports/
+
+# Logs
+*.log
+pipeline_info/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data
+*.bam
+*.bai
+*.vcf.gz
+*.fastq.gz
+!tests/data/*.fastq.gz
