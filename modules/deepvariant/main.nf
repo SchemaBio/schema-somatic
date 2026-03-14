@@ -1,7 +1,7 @@
 // DeepVariant 变异检测模块
 // 用途：使用深度学习进行高精度的种系变异检测
 // 用法：
-//   - 输入：样本ID、BAM文件及索引、参考基因组、模型类型
+//   - 输入：样本ID、CRAM文件及索引、参考基因组、模型类型
 //   - 模型类型：WGS(全基因组)、WES(外显子)、PACBIO(长读长)
 //   - 输出：VCF文件和gVCF文件
 //   - 自动使用多线程加速
@@ -12,7 +12,7 @@ process DEEPVARIANT {
     publishDir "${params.output}/03.Mutations/Germline", mode: 'copy'
 
     input:
-        tuple val(sample_id), path(bam), path(bai)
+        tuple val(sample_id), path(cram), path(crai)
         path fasta
         path fasta_index
         val model_type  // 'WGS', 'WES', or 'PACBIO'
@@ -27,7 +27,7 @@ process DEEPVARIANT {
     /opt/deepvariant/bin/run_deepvariant \\
         --model_type=${model_type} \\
         --ref=${fasta} \\
-        --reads=${bam} \\
+        --reads=${cram} \\
         --output_vcf=${sample_id}.deepvariant.vcf.gz \\
         --output_gvcf=${sample_id}.deepvariant.gvcf.gz \\
         --num_shards=${threads}
