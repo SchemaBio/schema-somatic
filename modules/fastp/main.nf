@@ -1,4 +1,9 @@
-// FASTP module for quality control
+// FASTP 质控模块
+// 用途：对原始测序数据进行质量控制和接头去除
+// 用法：
+//   - 输入：样本ID、双端FASTQ文件
+//   - 输出：过滤后的FASTQ、JSON和HTML质控报告
+//   - 自动检测并去除接头序列
 
 process FASTP {
     tag "FASTP on $sample_id"

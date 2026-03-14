@@ -1,4 +1,11 @@
-// 主要用于EGFR 19del和20ins的单倍型校正
+// WhatsHap 单倍型分析模块
+// 用途：计算单倍型并合并EGFR关键区域的相邻变异
+// 包含的process：
+//   WHATSHAP - 基于reads进行单倍型分型
+//   EGFRHAP - 合并EGFR 19del和20ins区域的MNP
+// 用法：
+//   - 支持GRCh37和GRCh38两种参考基因组
+//   - 只对EGFR特定区域进行变异合并，其他区域保持不变
 
 process WHATSHAP {
     tag "WHATSHAP on $sample_id"

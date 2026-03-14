@@ -1,4 +1,9 @@
-// BWA MEM module for read alignment
+// BWA MEM 比对模块
+// 用途：将测序reads比对到参考基因组
+// 用法：
+//   - 输入：样本ID、FASTQ文件、参考基因组、输出格式(bam/cram)、Read Group ID
+//   - 输出：BAM/CRAM文件及索引
+//   - 支持 BWA-MEM 和 BWA-MEM2 两种算法
 
 process BWAMEM {
     tag "BWAMEM on $sample_id"

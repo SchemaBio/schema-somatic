@@ -1,3 +1,9 @@
+// Samtools 工具模块
+// 用途：BAM/CRAM文件索引和格式转换
+// 用法：
+//   INDEXALIGNMENT - 为比对文件创建索引（.bai或.crai）
+//   BAM2FASTQ - 将BAM文件转换回FASTQ格式
+
 process INDEXALIGNMENT {
     tag "INDEXALIGNMENT on $sample_id"
     label 'indexalignment'

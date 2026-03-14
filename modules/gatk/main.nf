@@ -1,4 +1,12 @@
-// GATK module for variant calling
+// GATK 变异检测模块
+// 用途：标记重复、合并比对、质控统计、变异检测
+// 包含的process：
+//   MARKDUPLICATES - 标记PCR重复
+//   MARKDUPLICATESUMI - 基于UMI标记重复
+//   MERGEBAMALIGNMENT - 合并比对和未比对BAM
+//   COLLECTQCMETRICS - 收集质控指标
+//   LEFTALIGNANDTRIMVARIANTS - 左对齐和标准化变异
+//   MUTECT2 - 体细胞突变检测
 
 process MARKDUPLICATES {
     tag "MARKDUPLICATES on $sample_id"

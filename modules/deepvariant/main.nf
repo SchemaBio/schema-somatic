@@ -1,4 +1,10 @@
-// DeepVariant module for variant calling
+// DeepVariant 变异检测模块
+// 用途：使用深度学习进行高精度的种系变异检测
+// 用法：
+//   - 输入：样本ID、BAM文件及索引、参考基因组、模型类型
+//   - 模型类型：WGS(全基因组)、WES(外显子)、PACBIO(长读长)
+//   - 输出：VCF文件和gVCF文件
+//   - 自动使用多线程加速
 
 process DEEPVARIANT {
     tag "DEEPVARIANT on $sample_id"

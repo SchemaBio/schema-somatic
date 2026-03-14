@@ -1,4 +1,9 @@
-// FGBIO module for UMI processing (Complete Workflow)
+// FGBIO UMI处理模块
+// 用途：提取和处理分子标签(UMI)用于去重
+// 用法：
+//   - 输入：样本ID、FASTQ文件、UMI结构（如"5M5S+T +T"）、参考基因组
+//   - 输出：包含UMI信息的未比对BAM文件
+//   - UMI结构说明：M=分子标签，S=跳过碱基，T=模板序列
 
 process EXTRACTUMI {
     tag "EXTRACTUMI on $sample_id"
