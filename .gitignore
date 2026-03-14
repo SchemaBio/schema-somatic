@@ -4,6 +4,7 @@ work/
 output/
 results/
 .reports/
+.claude/
 
 # Logs
 *.log

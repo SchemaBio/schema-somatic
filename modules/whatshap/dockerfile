@@ -1,0 +1,47 @@
+# 第一阶段：构建
+FROM python:3.9-slim AS builder
+
+# License Information:
+# - whatshap: MIT License
+# - vcflib: BSD-2-Clause License (https://github.com/Sentieon/vcflib)
+# - merge_mnp.py: BSD-2-Clause License, Copyright (c) Sentieon Inc.
+
+# 安装必要的依赖
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        gcc zlib1g-dev wget tar make bcftools && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# 安装 Python 依赖
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir whatshap pyfaidx
+
+# 下载 vcflib 和 merge_mnp.py 脚本
+RUN wget -O /usr/local/bin/merge_mnp.py \
+    https://github.com/Sentieon/sentieon-scripts/raw/refs/heads/master/merge_mnp/merge_mnp.py && \
+    chmod +x /usr/local/bin/merge_mnp.py && \
+    wget -O /tmp/vcflib.tar.gz https://github.com/Sentieon/vcflib/archive/refs/heads/main.tar.gz && \
+    tar -xzf /tmp/vcflib.tar.gz -C /tmp && \
+    mv /tmp/vcflib-main/vcflib /usr/local/bin/ && \
+    rm -rf /tmp/vcflib.tar.gz /tmp/vcflib-main
+
+# 第二阶段：最终镜像
+FROM python:3.9-slim
+
+# 从第一阶段复制必要的文件
+COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+COPY --from=builder /usr/local/bin/whatshap /usr/local/bin/whatshap
+COPY --from=builder /usr/local/bin/merge_mnp.py /usr/local/bin/merge_mnp.py
+COPY --from=builder /usr/local/bin/vcflib /usr/local/bin/vcflib
+
+# 安装运行时依赖
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        tabix bcftools && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# 默认命令
+CMD ["whatshap", "--help"]
+LABEL maintainer="pzweuj" version="2.8" description="whatshap with tabix"
