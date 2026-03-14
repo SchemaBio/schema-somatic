@@ -167,6 +167,7 @@ process MUTECT2 {
         val gnomad       // 可选，germline resource
         val pon          // 可选，panel of normals
         val bed          // 可选，捕获区域bed文件
+        val hotspot          // 可选，热点区域vcf
 
     output:
         path("${sample_id}.mutect2.vcf.gz"), emit: vcf
@@ -179,6 +180,7 @@ process MUTECT2 {
     def germline_resource = gnomad ? "--germline-resource ${gnomad}" : ""
     def panel_of_normals = pon ? "-pon ${pon}" : ""
     def capture_bed = bed ? "-L ${bed}" : ""
+    def hotspot_region = hotspot ? "-alleles ${hotspot}" : ""
     def threads = task.cpus
     def downsample = params.maxReadsPerAlignmentStart ? "--max-reads-per-alignment-start ${params.maxReadsPerAlignmentStart}" : "0"
 
@@ -193,6 +195,7 @@ process MUTECT2 {
         ${panel_of_normals} \\
         --native-pair-hmm-threads ${threads} \\
         ${capture_bed} \\
+        ${hotspot_region} \\
         -A Coverage \\
         -A GenotypeSummaries \\
         -mbq 15 \\
