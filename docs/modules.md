@@ -47,7 +47,7 @@
 - **用途**: 创建BAM/CRAM索引
 - **输入**:
   - `tuple val(sample_id), path(alignment_file)` - 比对文件
-  - `val(publish_dir)` - 发布目录
+  - `val publish_dir` - 发布目录
 - **输出**:
   - `bai/crai` - 索引文件
 
@@ -56,7 +56,7 @@
 - **用途**: BAM转FASTQ
 - **输入**:
   - `tuple val(sample_id), path(bam)` - BAM文件
-  - `val(publish_dir)` - 发布目录
+  - `val publish_dir` - 发布目录
 - **输出**:
   - `reads` - FASTQ文件
 
@@ -67,7 +67,7 @@
 - **用途**: 标记PCR重复
 - **输入**:
   - `tuple val(sample_id), path(cram), path(crai)` - CRAM文件
-  - `val fasta` - 参考基因组
+  - `path fasta` - 参考基因组
 - **输出**:
   - `cram` - 去重后的CRAM
   - `metrics` - 去重指标
@@ -184,30 +184,35 @@
   - `tuple val(sample_id), path(alignment), path(index)` - BAM/CRAM
   - `path fasta` - 参考基因组
   - `path fasta_index` - 参考基因组索引
-  - `path target_bed` - 目标区域BED
-  - `path antitarget_bed` - 反目标区域BED
+  - `val genome_version` - 基因组版本('GRCh38'或'GRCh37')
+  - `path user_bed` - 用户自定义BED（可选，与预置target取交集）
   - `path baseline` - 基线参考
+- **预置文件**:
+  - `assets/cnvkit/GRCh38_target.bed`
+  - `assets/cnvkit/GRCh38_antitarget.bed`
+  - `assets/cnvkit/GRCh37_target.bed`
+  - `assets/cnvkit/GRCh37_antitarget.bed`
 - **输出**:
   - `call_result` - CNV结果
   - `segment_result` - 分段结果
 
 ### CNVKITBASELINE
 - **路径**: `modules/cnvkit/main.nf`
-- **用途**: 创建CNV基线
+- **用途**: 多样本创建CNV基线
 - **输入**:
   - `path normal_bams` - 多个正常样本BAM
   - `path normal_bais` - 索引文件
   - `path fasta` - 参考基因组
   - `path fasta_index` - 参考基因组索引
-  - `path target_bed` - 目标区域BED
-  - `path antitarget_bed` - 反目标区域BED
+  - `val genome_version` - 基因组版本
+  - `path user_bed` - 用户自定义BED（可选）
   - `val prefix` - 输出前缀
 - **输出**:
   - `baseline` - 基线参考文件
 
 ### CNVKITNORMAL
 - **路径**: `modules/cnvkit/main.nf`
-- **用途**: 单样本创建基线
+- **用途**: 单样本创建CNV基线
 - **输入**: 同CNVKITBASELINE（单个样本）
 - **输出**:
   - `baseline` - 基线参考文件
@@ -221,17 +226,94 @@
 - **输出**:
   - `cnvkit_sex` - 性别判断结果
 
-## 11. VCF过滤模块
+## 11. MSI检测模块
+
+### MSISENSORPRO_SCAN
+- **路径**: `modules/msisensorpro/main.nf`
+- **用途**: 扫描参考基因组获取MSI位点
+- **输入**:
+  - `path fasta` - 参考基因组
+  - `path fasta_index` - 参考基因组索引
+  - `val scan_name` - 扫描名称
+- **输出**:
+  - `loci` - MSI位点文件
+
+### MSISENSORPRO
+- **路径**: `modules/msisensorpro/main.nf`
+- **用途**: MSI分析
+- **输入**:
+  - `tuple val(sample_id), path(alignment), path(index)` - BAM/CRAM
+  - `path fasta` - 参考基因组
+  - `path fasta_index` - 参考基因组索引
+  - `path baseline` - MSI基线
+- **输出**:
+  - `msi_result` - MSI分析结果
+
+### MSISENSORPRO_BASELINE
+- **路径**: `modules/msisensorpro/main.nf`
+- **用途**: 创建MSI基线
+- **输入**:
+  - `path normal_bams` - 多个正常样本BAM
+  - `path normal_bais` - 索引文件
+  - `path fasta` - 参考基因组
+  - `path fasta_index` - 参考基因组索引
+  - `path loci` - MSI位点文件
+  - `val prefix` - 输出前缀
+- **输出**:
+  - `baseline` - MSI基线文件
+
+## 12. HLA分型模块
+
+### OPTITYPE
+- **路径**: `modules/optitype/main.nf`
+- **用途**: HLA分型
+- **输入**:
+  - `tuple val(sample_id), path(read1), path(read2)` - FASTQ文件
+- **输出**:
+  - `hla_result` - HLA分型结果
+
+## 13. LOH分析模块
+
+### LOHHLA
+- **路径**: `modules/lohhla/main.nf`
+- **用途**: 检测HLA Loss of Heterozygosity (LOH)
+- **输入**:
+  - `tuple val(sample_id), path(tumor_bam), path(tumor_bai)` - 肿瘤样本
+  - `tuple val(sample_id), path(normal_bam), path(normal_bai)` - 正常样本
+  - `path solutions` - 拷贝数结果文件
+  - `path hla_results` - HLA分型结果
+  - `val genomeAssembly` - 基因组版本('hg19'或'grch38')
+- **输出**:
+  - `lohhla_result` - LOHHLA原始结果
+  - `lohhla_filtered` - 过滤后的LOH结果
+
+## 14. VCF过滤模块
 
 ### BCFTOOLS
 - **路径**: `modules/bcftools/main.nf`
 - **用途**: VCF过滤
 - **输入**:
   - `tuple val(sample_id), path(vcf)` - VCF文件
-  - `val(publish_dir)` - 发布目录
-  - `val(minAD)` - 最小等位基因深度
-  - `val(minAF)` - 最小等位基因频率
+  - `val publish_dir` - 发布目录
+  - `val minAD` - 最小等位基因深度
+  - `val minAF` - 最小等位基因频率
 - **输出**:
   - `filtered_vcf` - 过滤后的VCF
 
+## 工作流
 
+### SINGLE - 单样本分析
+- **路径**: `workflows/single/main.nf`
+- **用途**: 单样本全流程分析
+
+### PAIRED - 配对样本分析
+- **路径**: `workflows/paired/main.nf`
+- **用途**: 肿瘤-正常配对样本分析
+
+### CNV_BASELINE - CNV基线建立
+- **路径**: `workflows/cnv_baseline/main.nf`
+- **用途**: 建立CNV分析基线
+
+### MSI_BASELINE - MSI基线建立
+- **路径**: `workflows/msi_baseline/main.nf`
+- **用途**: 建立MSI分析基线
