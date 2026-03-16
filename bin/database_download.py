@@ -24,7 +24,10 @@ REFGENOME_SOURCES = {
         'gnomad': '',
         'clnvar': '',
         'exon_bed': '',
-        'civic': ''
+        'civic': '',
+        'pangolin': '',
+        'cytoband': '',
+        'mskcc_hotspot': ''
     },
     'GRCh37': {
         'fasta': 'https://ftp.ensembl.org/pub/grch37/release-115/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz',
@@ -35,7 +38,10 @@ REFGENOME_SOURCES = {
         'gnomad': '',
         'clnvar': '',
         'exon_bed': '',
-        'civic': ''
+        'civic': '',
+        'pangolin': '',
+        'cytoband': '',
+        'mskcc_hotspot': ''
     }
 }
 
