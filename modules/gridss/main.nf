@@ -31,7 +31,5 @@ process GRIDSS {
         --threads ${threads} \\
         --jvmheap ${memory}g \\
         ${alignment}
-
-    tabix -p vcf ${sample_id}.gridss.vcf.gz
     """
 }
