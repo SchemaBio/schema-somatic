@@ -17,7 +17,7 @@ from pathlib import Path
 REFGENOME_SOURCES = {
     'GRCh38': {
         'fasta': 'https://ftp.ensembl.org/pub/release-115/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz',
-        'gff': 'https://ftp.ensembl.org/pub/release-98/gff3/homo_sapiens/Homo_sapiens.GRCh38.98.gff3.gz',
+        'gtf': 'https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/hg38.ncbiRefSeq.gtf.gz',
         'vep': 'https://ftp.ensembl.org/pub/release-115/variation/indexed_vep_cache/homo_sapiens_merged_vep_115_GRCh38.tar.gz',
         'evoscore2': 'https://huggingface.co/datasets/pzweuj/EVOScore-2/blob/main/hg38_VESM_3B_scores.vcf.gz',
         'alphamissense': 'https://zenodo.org/records/10813168/files/AlphaMissense_hg38.tsv.gz',
@@ -31,7 +31,7 @@ REFGENOME_SOURCES = {
     },
     'GRCh37': {
         'fasta': 'https://ftp.ensembl.org/pub/grch37/release-115/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz',
-        'gff': 'https://ftp.ensembl.org/pub/release-75/gff3/homo_sapiens/Homo_sapiens.GRCh37.75.gff3.gz',
+        'gtf': 'https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/genes/hg19.ncbiRefSeq.gtf.gz',
         'vep': 'https://ftp.ensembl.org/pub/release-115/variation/indexed_vep_cache/homo_sapiens_merged_vep_115_GRCh37.tar.gz',
         'evoscore2': 'https://huggingface.co/datasets/pzweuj/EVOScore-2/blob/main/hg19_VESM_3B_scores.vcf.gz',
         'alphamissense': 'https://zenodo.org/records/10813168/files/AlphaMissense_hg19.tsv.gz',
