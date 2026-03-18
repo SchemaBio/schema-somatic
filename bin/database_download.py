@@ -20,28 +20,28 @@ REFGENOME_SOURCES = {
         'gff': 'https://ftp.ensembl.org/pub/release-98/gff3/homo_sapiens/Homo_sapiens.GRCh38.98.gff3.gz',
         'vep': 'https://ftp.ensembl.org/pub/release-115/variation/indexed_vep_cache/homo_sapiens_merged_vep_115_GRCh38.tar.gz',
         'evoscore2': 'https://huggingface.co/datasets/pzweuj/EVOScore-2/blob/main/hg38_VESM_3B_scores.vcf.gz',
-        'alphamissense': '',
+        'alphamissense': 'https://zenodo.org/records/10813168/files/AlphaMissense_hg38.tsv.gz',
         'gnomad': '',
-        'clnvar': '',
-        'exon_bed': '',
+        'clnvar': 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh38/clinvar.vcf.gz',
+        'exon_bed': 'https://github.com/pzweuj/ManeLoca/raw/refs/heads/main/public/data/GRCh38.bed',
         'civic': '',
-        'pangolin': '',
+        'pangolin': 'https://zenodo.org/records/15649338/files/Pangolin_hg38_snvs_masked.zip',
         'cytoband': '',
-        'mskcc_hotspot': ''
+        'mskcc_hotspot': 'https://cbioportal-download.s3.amazonaws.com/cancerhotspots.v2.maf.gz'
     },
     'GRCh37': {
         'fasta': 'https://ftp.ensembl.org/pub/grch37/release-115/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna.primary_assembly.fa.gz',
         'gff': 'https://ftp.ensembl.org/pub/release-75/gff3/homo_sapiens/Homo_sapiens.GRCh37.75.gff3.gz',
         'vep': 'https://ftp.ensembl.org/pub/release-115/variation/indexed_vep_cache/homo_sapiens_merged_vep_115_GRCh37.tar.gz',
         'evoscore2': 'https://huggingface.co/datasets/pzweuj/EVOScore-2/blob/main/hg19_VESM_3B_scores.vcf.gz',
-        'alphamissense': '',
+        'alphamissense': 'https://zenodo.org/records/10813168/files/AlphaMissense_hg19.tsv.gz',
         'gnomad': '',
-        'clnvar': '',
-        'exon_bed': '',
-        'civic': '',
+        'clnvar': 'https://ftp.ncbi.nlm.nih.gov/pub/clinvar/vcf_GRCh37/clinvar.vcf.gz',
+        'exon_bed': 'https://github.com/pzweuj/ManeLoca/raw/refs/heads/main/public/data/GRCh37.bed',
+        'civic': 'https://civicdb.org/downloads/nightly/nightly-civic_accepted.vcf',
         'pangolin': '',
         'cytoband': '',
-        'mskcc_hotspot': ''
+        'mskcc_hotspot': 'https://cbioportal-download.s3.amazonaws.com/cancerhotspots.v2.maf.gz'
     }
 }
 
