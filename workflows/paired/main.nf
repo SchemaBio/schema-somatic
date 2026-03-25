@@ -40,7 +40,9 @@ workflow PAIRED {
             normal_aligned.crai,
             params.gnomad ?: null,
             params.pon ?: null,
-            params.bed ?: null
+            params.bed ?: null,
+            null,
+            null
         )
     }
 

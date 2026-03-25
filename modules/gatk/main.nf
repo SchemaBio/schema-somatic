@@ -168,12 +168,11 @@ process MUTECT2 {
         val pon          // 可选，panel of normals
         val bed          // 可选，捕获区域bed文件
         val hotspot          // 可选，热点区域vcf
+        val output_suffix   // 可选，输出文件名后缀，用于区分不同调用
 
     output:
-        path("${sample_id}.mutect2.vcf.gz"), emit: vcf
-        path("${sample_id}.mutect2.vcf.gz.tbi"), emit: tbi
-        path("${sample_id}.mutect2.filtered.normalized.vcf.gz"), emit: left_vcf
-        path("${sample_id}.mutect2.filtered.normalized.vcf.gz.tbi"), emit: left_tbi
+        tuple val(sample_id), path("${sample_id}.${output_suffix ?: 'mutect2'}.vcf.gz"), path("${sample_id}.${output_suffix ?: 'mutect2'}.vcf.gz.tbi"), emit: vcf
+        tuple val(sample_id), path("${sample_id}.${output_suffix ?: 'mutect2'}.filtered.normalized.vcf.gz"), path("${sample_id}.${output_suffix ?: 'mutect2'}.filtered.normalized.vcf.gz.tbi"), emit: left_vcf
 
     script:
     def normal_input = normal_cram ? "-I ${normal_cram}" : ""
@@ -183,13 +182,14 @@ process MUTECT2 {
     def hotspot_region = hotspot ? "-alleles ${hotspot}" : ""
     def threads = task.cpus
     def downsample = params.maxReadsPerAlignmentStart ? "--max-reads-per-alignment-start ${params.maxReadsPerAlignmentStart}" : "0"
+    def suffix = output_suffix ?: 'mutect2'
 
     """
     gatk Mutect2 \\
         -R ${fasta} \\
         -I ${cram} \\
         ${normal_input} \\
-        -O ${sample_id}.mutect2.vcf.gz \\
+        -O ${sample_id}.${suffix}.vcf.gz \\
         -tumor ${sample_id} \\
         ${germline_resource} \\
         ${panel_of_normals} \\
@@ -202,23 +202,23 @@ process MUTECT2 {
         --force-active true \\
         --callable-depth 50 \\
         ${downsample} \\
-        --f1r2-tar-gz ${sample_id}.f1r2.tar.gz
+        --f1r2-tar-gz ${sample_id}.${suffix}.f1r2.tar.gz
 
     gatk LearnReadOrientationModel \\
-        -I ${sample_id}.f1r2.tar.gz \\
-        -O ${sample_id}.f1r2.model.tar.gz
-    
+        -I ${sample_id}.${suffix}.f1r2.tar.gz \\
+        -O ${sample_id}.${suffix}.f1r2.model.tar.gz
+
     gatk FilterMutectCalls \\
         --min-slippage-length 5 \\
-        -O ${sample_id}.mutect2.filtered.vcf.gz \\
+        -O ${sample_id}.${suffix}.filtered.vcf.gz \\
         -R ${fasta} \\
-        --orientation-bias-artifact-priors ${sample_id}.f1r2.model.tar.gz \\
-        -V ${sample_id}.mutect2.vcf.gz
+        --orientation-bias-artifact-priors ${sample_id}.${suffix}.f1r2.model.tar.gz \\
+        -V ${sample_id}.${suffix}.vcf.gz
 
     gatk LeftAlignAndTrimVariants \\
-        --variant ${sample_id}.mutect2.filtered.vcf.gz \\
+        --variant ${sample_id}.${suffix}.filtered.vcf.gz \\
         --reference ${fasta} \\
-        --output ${sample_id}.mutect2.filtered.normalized.vcf.gz \\
+        --output ${sample_id}.${suffix}.filtered.normalized.vcf.gz \\
         --split-multi-allelics
     """
 }

@@ -4,11 +4,17 @@ include { FASTP } from '../modules/fastp/main'
 include { BWAMEM } from '../modules/bwamem/main'
 include { INDEXALIGNMENT } from '../modules/samtools/main'
 include { MUTECT2 } from '../modules/gatk/main'
+include { MUTECT2 as HOTSPOT } from '../modules/gatk/main'
 include { DEEPVARIANT } from '../modules/deepvariant/main'
 include { MANTA } from '../modules/manta/main'
 include { GRIDSS } from '../modules/gridss/main'
 include { CNVKIT } from '../modules/cnvkit/main'
 include { MSISENSORPRO } from '../modules/msisensorpro/main'
+include { WHATSHAP } from '../modules/whatshap/main'
+include { EGFRHAP } from '../modules/whatshap/main'
+include { VEP } from '../modules/vep/main'
+include { VEP as VEP_HOTSPOT } from '../modules/vep/main'
+include { VEP as VEP_GERMLINE } from '../modules/vep/main'
 
 // 参考基因组
 ref_fasta = file(params.reference)
@@ -46,8 +52,59 @@ workflow SINGLE {
             aligned.cram.map { file -> tuple(file.baseName, file, file + '.crai') },
             ref_fasta,
             ref_index,
-            null, null, null, null, null
+            null, null, null, null, null, null, null
         )
+
+        // 4.2 单倍型分型
+        WHATSHAP(
+            MUTECT2.out.left_vcf.join(aligned.cram.map { file -> tuple(file.baseName, file, file + '.crai') }),
+            ref_fasta,
+            ref_index
+        )
+
+        // 4.3 EGFR区域变异合并
+        EGFRHAP(
+            WHATSHAP.out.phased_vcf,
+            ref_fasta,
+            ref_index,
+            genome_version
+        )
+
+        // 4.4 EGFR区域VEP注释
+        if (params.vep_database) {
+            VEP(
+                EGFRHAP.out.merged_vcf,
+                ref_fasta,
+                ref_index,
+                params.vep_database,
+                genome_version,
+                'egfr'
+            )
+        }
+    }
+
+    // 4.1 热点区域变异检测
+    if (params.run_hotspot && params.hotspot) {
+        HOTSPOT(
+            aligned.cram.map { file -> tuple(file.baseName, file, file + '.crai') },
+            ref_fasta,
+            ref_index,
+            null, null, null, null, null,
+            params.hotspot,
+            'hotspot'
+        )
+
+        // 4.5 热点区域VEP注释
+        if (params.vep_database) {
+            VEP_HOTSPOT(
+                HOTSPOT.out.left_vcf,
+                ref_fasta,
+                ref_index,
+                params.vep_database,
+                genome_version,
+                'hotspot'
+            )
+        }
     }
 
     if (params.run_deepvariant) {
@@ -57,6 +114,18 @@ workflow SINGLE {
             ref_index,
             params.model_type ?: 'WGS'
         )
+
+        // 4.6 种系变异VEP注释
+        if (params.vep_database) {
+            VEP_GERMLINE(
+                DEEPVARIANT.out.vcf,
+                ref_fasta,
+                ref_index,
+                params.vep_database,
+                genome_version,
+                'germline'
+            )
+        }
     }
 
     // 5. 结构变异

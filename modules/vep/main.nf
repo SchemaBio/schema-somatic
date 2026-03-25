@@ -17,21 +17,23 @@ process VEP {
         path fasta_index
         val vep_database
         val genome_build  // 'GRCh37' or 'GRCh38'
+        val output_suffix   // 可选，输出文件名后缀
 
     output:
-        tuple val(sample_id), path("${sample_id}.vep.vcf"), emit: annotated_vcf
-        path("${sample_id}.vep.html"), emit: html_report
+        tuple val(sample_id), path("${sample_id}.${output_suffix ?: 'vep'}.vcf"), emit: annotated_vcf
+        path("${sample_id}.${output_suffix ?: 'vep'}.html"), emit: html_report
 
     script:
     def threads = task.cpus
     def assembly = genome_build == 'GRCh38' ? 'GRCh38' : 'GRCh37'
     def cache_str = "Uploaded_variation,Location,REF_ALLELE,Allele,Consequence,IMPACT,DOMAINS,Feature,DISTANCE,EXON,INTRON,SYMBOL,STRAND,HGNC_ID,HGVSc,HGVSp,HGVSg,MAX_AF,Protein_position,Amino_acids,Codons,PUBMED,Existing_variation"
     def custom_str = "cytoBand,ClinVar_CLNSIG,ClinVar_CLNREVSTAT,ClinVar_CLNDN,ClinVar_CLNHGVS,CIViC"
+    def suffix = output_suffix ?: 'vep'
     """
     vep --offline --cache --dir_cache ${vep_database} --refseq \\
         --dir_plugins ${vep_database}/Plugins \\
         --force_overwrite --fork ${threads} \\
-        -i ${vcf} -o ${sample_id}.vep.vcf \\
+        -i ${vcf} -o ${sample_id}.${suffix}.vcf \\
         --format vcf --vcf --fa ${fasta} \\
         --shift_3prime 1 --assembly ${assembly} --no_escape --check_existing --exclude_predicted \\
         --uploaded_allele --show_ref_allele --numbers --domains \\
@@ -42,6 +44,6 @@ process VEP {
         --custom file=${vep_database}/cytoband/cytoBand.bed.gz,short_name=cytoBand,format=bed,type=overlap,coords=0 \\
         --plugin Pangolin,${vep_database}/pangolin/pangolin.vcf.gz \\
         --fields ${cache_str},${custom_str},${dbnsfp_str},${spliceai_str} \\
-        --stats_file ${sample_id}.vep.html
+        --stats_file ${sample_id}.${suffix}.html
     """
 }
