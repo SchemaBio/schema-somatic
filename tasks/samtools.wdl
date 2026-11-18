@@ -27,3 +27,24 @@ task SamtoolsSexCheck {
         docker: "schemabio/mapping:v1.1.0"
     }
 }
+
+task SamToFastq {
+    input {
+        String prefix
+        File bam
+    }
+
+    command <<<
+        samtools fastq -1 ~{prefix}_R1.fastq.gz -2 ~{prefix}_R2.fastq.gz -0 /dev/null -s /dev/null -n ~{bam}
+    >>>
+
+    output {
+        File fastq_1 = "~{prefix}_R1.fastq.gz"
+        File fastq_2 = "~{prefix}_R2.fastq.gz"
+    }
+
+    runtime {
+        docker: "schemabio/mapping:v1.1.0"
+    }
+}
+
