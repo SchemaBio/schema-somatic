@@ -68,4 +68,93 @@ task MarkDuplicates {
     }
 }
 
+task CollectQCMetrics {
+    input {
+        String prefix
+        File bam
+        File bai
+        File bed
+        String fasta
+        Int threads
+        Directory ref_dir
+    }
+
+    Int memory_gb = threads * 2
+
+    command <<<
+        # gatk CollectInsertSizeMetrics \
+        #     -I ~{bam} \
+        #     -O ~{prefix}.insertsize.txt \
+        #     -H ~{prefix}.histogram.pdf
+        
+        # gatk EstimateLibraryComplexity \
+        #     -I ~{bam} \
+        #     -O ~{prefix}.complexity_metrics.txt
+
+        gatk CollectAlignmentSummaryMetrics \
+            -I ~{bam} \
+            -R ~{ref_dir}/~{fasta} \
+            -O ~{prefix}.metrics.txt
+
+        gatk BedToIntervalList \
+            -I ~{bed} \
+            -O ~{prefix}.interval_list \
+            -SD ~{ref_dir}/~{fasta}
+
+        gatk CollectHsMetrics \
+            -BI ~{prefix}.interval_list \
+            -TI ~{prefix}.interval_list \
+            -I ~{bam} \
+            -O ~{prefix}.hs.txt
+    >>>
+
+    output {
+        File summary = "~{prefix}.metrics.txt"
+        File hs_metric = "~{prefix}.hs.txt"
+    }
+
+    runtime {
+        cpu: threads
+        memory: "~{memory_gb}G"
+        docker: "schemabio/gatk:4.6.2.0"
+    }
+
+Mutect2Pair {
+    input {
+        String prefix
+        File tumor_bam
+        File tumor_bai
+        String tumor_sample_name
+        File normal_bam
+        File normal_bai
+        String normal_sample_name
+        File ref_fasta
+        File germline_resource_vcf
+        File pon_vcf
+    }
+
+    command <<<
+        set -euo pipefail
+
+        gatk Mutect2 \
+            -R ~{ref_fasta} \
+            -I ~{tumor_bam} \
+            -I ~{normal_bam} \
+            -tumor ~{tumor_sample_name} \
+            -normal ~{normal_sample_name} \
+            --germline-resource ~{germline_resource_vcf} \
+            --panel-of-normals ~{pon_vcf} \
+            -O ~{prefix}.unfiltered.vcf
+    >>>
+
+    output {
+        File unfiltered_vcf = "~{prefix}.unfiltered.vcf"
+        File unfiltered_vcf_index = "~{prefix}.unfiltered.vcf.idx"
+    }
+}
+
+
+Mutect2 {
+
+}
 

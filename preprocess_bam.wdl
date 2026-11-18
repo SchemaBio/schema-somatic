@@ -115,10 +115,12 @@ workflow PreBam {
     # 两条分支的输出都是长度 0 或 1 的数组，合并后恰好一个元素
     Array[File] result_bam = flatten([MarkDuplicates.markdup_bam, Markdup.markdup_bam])
     Array[File] result_bai = flatten([MarkDuplicates.markdup_bai, Markdup.markdup_bai])
+    Array[File] stat_file = flatten([MarkDuplicates.metrics, Markdup.sambamba_stats])
 
     output {
         File fastq_report = Fastp.json_report
         File bam = result_bam[0]
         File bai = result_bai[0]
+        File stats = stat_file[0]
     }
 }
