@@ -15,8 +15,10 @@ workflow PreQC {
         File markdup_stats
         Int sry_sex_cutoff
         Int threads
+        String assembly
+        String fasta
         Directory ref_dir
-    }    
+    }
 
 
     call SAMTOOLS.SamtoolsSexCheck as SamtoolsSexCheck {
@@ -60,7 +62,7 @@ workflow PreQC {
 
     output {
         File qc_report = QCReport.qc_report
+        File xamdst_report = Xamdst.xamdst_report
     }
 
 }
-

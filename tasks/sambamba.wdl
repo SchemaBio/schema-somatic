@@ -27,7 +27,7 @@ task SambambaMarkdup {
             2> ~{prefix}.sambamba.log
 
         samtools index ~{prefix}.markdup.bam
-        
+
         # 使用 flagstat 获取标准化的统计数据，比解析工具 log 更安全
         samtools flagstat ~{prefix}.markdup.bam > ~{prefix}.flagstat
 
@@ -35,7 +35,7 @@ task SambambaMarkdup {
 
         # 安全地提取数据：使用 || true 防止 set -e 导致流程崩溃
         TOTAL_READS=$(grep "in total" ~{prefix}.flagstat | awk '{print $1}' || true)
-        DUPLICATES=$(grep "duplicates" ~{prefix}.flagstat | awk '{print $1}' || true)
+        DUPLICATES=$(grep -m1 "duplicates" ~{prefix}.flagstat | awk '{print $1}' || true)
 
         # 兜底机制：如果为空则赋值为 0，防止 Awk 报错
         TOTAL_READS=${TOTAL_READS:-0}
@@ -89,7 +89,7 @@ task SambambaMarkdup {
         File markdup_bam = "~{prefix}.markdup.bam"
         File markdup_bai = "~{prefix}.markdup.bam.bai"
         File sambamba_stats = "~{prefix}.sambamba.stats"
-        File flagstat_log = "~{prefix}.flagstat" 
+        File flagstat_log = "~{prefix}.flagstat"
     }
 
     runtime {

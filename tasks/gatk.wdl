@@ -5,7 +5,7 @@ task MergeBAMAlignment {
         String prefix
         File unmapped_bam
         File aligned_bam
-        File ref_fasta
+        String ref_fasta
         Directory ref_dir
     }
 
@@ -13,12 +13,13 @@ task MergeBAMAlignment {
         set -euo pipefail
 
         gatk MergeBamAlignment \
-            -R ~{ref_fasta} \
+            -R "~{ref_dir}/~{ref_fasta}" \
             -UNMAPPED ~{unmapped_bam} \
             -ALIGNED ~{aligned_bam} \
             -O ~{prefix}.merged.bam \
             --ALIGNER_PROPER_PAIR_FLAGS true \
-            --ATTRIBUTES_TO_RETAIN XS
+            --ATTRIBUTES_TO_RETAIN XS \
+            --CREATE_INDEX true
     >>>
 
     output {
@@ -52,7 +53,7 @@ task MarkDuplicates {
             --TMP_DIR ./tmp \
             --CREATE_INDEX true \
             --BARCODE_TAG RX
-        
+
         mv ~{prefix}.markdup.bai ~{prefix}.markdup.bam.bai
 
     >>>
@@ -82,14 +83,7 @@ task CollectQCMetrics {
     Int memory_gb = threads * 2
 
     command <<<
-        # gatk CollectInsertSizeMetrics \
-        #     -I ~{bam} \
-        #     -O ~{prefix}.insertsize.txt \
-        #     -H ~{prefix}.histogram.pdf
-        
-        # gatk EstimateLibraryComplexity \
-        #     -I ~{bam} \
-        #     -O ~{prefix}.complexity_metrics.txt
+        set -euo pipefail
 
         gatk CollectAlignmentSummaryMetrics \
             -I ~{bam} \
@@ -99,7 +93,7 @@ task CollectQCMetrics {
         gatk BedToIntervalList \
             -I ~{bed} \
             -O ~{prefix}.interval_list \
-            -SD ~{ref_dir}/~{fasta}
+            -SD "~{ref_dir}/~{fasta}"
 
         gatk CollectHsMetrics \
             -BI ~{prefix}.interval_list \
@@ -118,43 +112,85 @@ task CollectQCMetrics {
         memory: "~{memory_gb}G"
         docker: "schemabio/gatk:4.6.2.0"
     }
+}
 
-Mutect2Pair {
+
+task Mutect2 {
     input {
         String prefix
+        String fasta
+        Directory ref_dir
         File tumor_bam
         File tumor_bai
-        String tumor_sample_name
-        File normal_bam
-        File normal_bai
-        String normal_sample_name
-        File ref_fasta
+        File? normal_bam
+        File? normal_bai
+        String? normal_sample_name
+        File bed
         File germline_resource_vcf
+        File germline_resource_index
         File pon_vcf
+        File pon_index
     }
 
     command <<<
         set -euo pipefail
-
-        gatk Mutect2 \
-            -R ~{ref_fasta} \
-            -I ~{tumor_bam} \
-            -I ~{normal_bam} \
-            -tumor ~{tumor_sample_name} \
-            -normal ~{normal_sample_name} \
-            --germline-resource ~{germline_resource_vcf} \
-            --panel-of-normals ~{pon_vcf} \
-            -O ~{prefix}.unfiltered.vcf
+        ln -s "~{tumor_bam}" tumor.bam
+        ln -s "~{tumor_bai}" tumor.bam.bai
+        if [[ -n "~{default="" normal_bam}" ]]; then
+            ln -s "~{default="" normal_bam}" normal.bam
+            ln -s "~{default="" normal_bai}" normal.bam.bai
+        fi
+        ln -s "~{germline_resource_vcf}" germline.vcf.gz
+        ln -s "~{germline_resource_index}" germline.vcf.gz.tbi
+        ln -s "~{pon_vcf}" pon.vcf.gz
+        ln -s "~{pon_index}" pon.vcf.gz.tbi
+        normal_args=()
+        if [[ -e normal.bam ]]; then
+            normal_args=(-I normal.bam -normal "~{default="" normal_sample_name}")
+        fi
+        gatk Mutect2 -R "~{ref_dir}/~{fasta}" -L "~{bed}" \
+            -I tumor.bam "${normal_args[@]}" --germline-resource germline.vcf.gz \
+            --panel-of-normals pon.vcf.gz -O "~{prefix}.unfiltered.vcf.gz"
     >>>
 
     output {
-        File unfiltered_vcf = "~{prefix}.unfiltered.vcf"
-        File unfiltered_vcf_index = "~{prefix}.unfiltered.vcf.idx"
+        File vcf = "~{prefix}.unfiltered.vcf.gz"
+        File index = "~{prefix}.unfiltered.vcf.gz.tbi"
+        File stats = "~{prefix}.unfiltered.vcf.gz.stats"
+    }
+
+    requirements {
+        container: "schemabio/gatk:4.6.2.0"
+        cpu: 2
+        memory: "8 GiB"
     }
 }
 
+task FilterMutectCalls {
+    input {
+        String prefix
+        String fasta
+        Directory ref_dir
+        File vcf
+        File index
+        File stats
+    }
 
-Mutect2 {
+    command <<<
+        set -euo pipefail
+        ln -s "~{vcf}" calls.vcf.gz
+        ln -s "~{index}" calls.vcf.gz.tbi
+        gatk FilterMutectCalls -R "~{ref_dir}/~{fasta}" -V calls.vcf.gz \
+            --stats "~{stats}" -O "~{prefix}.filtered.vcf.gz"
+    >>>
 
+    output {
+        File filtered_vcf = "~{prefix}.filtered.vcf.gz"
+        File filtered_index = "~{prefix}.filtered.vcf.gz.tbi"
+    }
+
+    requirements {
+        container: "schemabio/gatk:4.6.2.0"
+        memory: "8 GiB"
+    }
 }
-

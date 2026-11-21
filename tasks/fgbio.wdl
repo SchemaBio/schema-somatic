@@ -18,43 +18,13 @@ task FastqToBam {
 
         fgbio FastqToBam \
             --input ~{read_1} ~{read_2} \
+            --read-group-id "~{prefix}" --sample "~{prefix}" --library "~{prefix}" --sort true \
             --read-structures ~{read_structure_1} ~{read_structure_2} \
             --output ~{prefix}.unmapped.bam
     >>>
 
     output {
         File unmapped_bam = "~{prefix}.unmapped.bam"
-    }
-
-    runtime {
-        cpu: 4
-        memory: "8G"
-        docker: "schemabio/fgbio:3.1.1"
-    }
-}
-
-task ExtractUmisFromBam {
-    input {
-        String prefix
-        File bam
-        String read_structure_1
-        String read_structure_2
-    }
-
-    command <<<
-        set -euo pipefail
-
-        # -s RX 保存分子标签，-t ZA ZB 保存标签在原始 read 中的位置，供后续还原
-        fgbio ExtractUmisFromBam \
-            --input ~{bam} \
-            --output ~{prefix}.unmapped.umi.bam \
-            --read-structures ~{read_structure_1} ~{read_structure_2} \
-            --molecular-index-tags RX \
-            --assignment-tags ZA ZB
-    >>>
-
-    output {
-        File umi_bam = "~{prefix}.unmapped.umi.bam"
     }
 
     runtime {

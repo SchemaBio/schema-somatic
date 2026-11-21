@@ -9,10 +9,15 @@ task SamtoolsSexCheck {
     }
 
     command <<<
+        set -euo pipefail
+        ln -s "~{bam}" input.bam
+        ln -s "~{bai}" input.bam.bai
+        chrom=$(samtools idxstats input.bam | awk '$1=="Y" || $1=="chrY" {print $1}')
+        test -n "$chrom"
         if [ "~{assembly}" == "GRCh38" ]; then
-            samtools view ~{bam} Y:2786855-2787682 | wc -l > ~{prefix}.SRY.count.txt
+            samtools view -c input.bam "$chrom":2786855-2787682 > ~{prefix}.SRY.count.txt
         elif [ "~{assembly}" == "GRCh37" ]; then
-            samtools view ~{bam} Y:2654896-2655723 | wc -l > ~{prefix}.SRY.count.txt
+            samtools view -c input.bam "$chrom":2654896-2655723 > ~{prefix}.SRY.count.txt
         else
             echo "Unsupported assembly: ~{assembly}" >&2
             exit 1
@@ -47,4 +52,3 @@ task SamToFastq {
         docker: "schemabio/mapping:v1.1.0"
     }
 }
-

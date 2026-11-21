@@ -30,8 +30,11 @@ task Coverage {
     }
 
     command <<<
-        cnvkit.py coverage ~{bam} -b ~{target_bed} -o ~{prefix}.targetcoverage.cnn
-        cnvkit.py coverage ~{bam} -b ~{antitarget_bed} -o ~{prefix}.antitargetcoverage.cnn
+        set -euo pipefail
+        ln -s "~{bam}" input.bam
+        ln -s "~{bai}" input.bam.bai
+        cnvkit.py coverage input.bam ~{target_bed} -o ~{prefix}.targetcoverage.cnn
+        cnvkit.py coverage input.bam ~{antitarget_bed} -o ~{prefix}.antitargetcoverage.cnn
     >>>
 
     output {
@@ -47,13 +50,14 @@ task Coverage {
 task Reference {
     input {
         String prefix
-        Array[File] target_coverage
-        Array[File] antitarget_coverage
-        File fasta
+        File target_coverage
+        File antitarget_coverage
+        String fasta
+        Directory ref_dir
     }
 
     command <<<
-        cnvkit.py reference ~{target_coverage} ~{antitarget_coverage} -f ~{fasta} -o ~{prefix}.reference.cnn
+        cnvkit.py reference ~{target_coverage} ~{antitarget_coverage} -f "~{ref_dir}/~{fasta}" -o ~{prefix}.reference.cnn
     >>>
 
     output {
@@ -75,15 +79,17 @@ task CnvkitCore {
     }
 
     command <<<
-        cnvkit.py fix ~{target_coverage} ~{antitarget_coverage} -r ~{reference_cnn} -o ~{prefix}.cnr
+        set -euo pipefail
+        cnvkit.py fix ~{target_coverage} ~{antitarget_coverage} ~{reference_cnn} -o ~{prefix}.cnr
         cnvkit.py segment ~{prefix}.cnr -o ~{prefix}.cns -m ~{seg_method}
         cnvkit.py call ~{prefix}.cns -o ~{prefix}.call.cns
-        cnvkit.py call ~{prefix}.cnr -o ~{prefix}.call.cnr
+
     >>>
 
     output {
         File call_cns = "~{prefix}.call.cns"
-        File call_cnr = "~{prefix}.call.cnr"
+        File cnr = "~{prefix}.cnr"
+        File segments = "~{prefix}.cns"
     }
 
     runtime {
@@ -92,3 +98,32 @@ task CnvkitCore {
 }
 
 
+task CnvkitSingle {
+    input {
+        String prefix
+        File bam
+        File bai
+        File reference_cnn
+        Int threads
+    }
+
+    command <<<
+        set -euo pipefail
+        ln -s "~{bam}" "~{prefix}.bam"
+        ln -s "~{bai}" "~{prefix}.bam.bai"
+        cnvkit.py batch "~{prefix}.bam" -r "~{reference_cnn}" -p ~{threads} -d result
+        cnvkit.py call "result/~{prefix}.cns" -o "result/~{prefix}.call.cns"
+    >>>
+
+    output {
+        File cnr = "result/~{prefix}.cnr"
+        File segments = "result/~{prefix}.cns"
+        File call_cns = "result/~{prefix}.call.cns"
+    }
+
+    requirements {
+        container: "schemabio/cnvkit:0.9.13.4"
+        cpu: threads
+        memory: "8 GiB"
+    }
+}
